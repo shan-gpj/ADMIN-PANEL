@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>panel ni shan</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase.js"></script>
+<style>
+body{margin:0;font-family:'Segoe UI';background:#f9f9f9;color:#333;}
+.card{max-width:400px;margin:30px auto;padding:20px;border-radius:12px;background:white;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
+input, select, button{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:1px solid #ccc;box-sizing:border-box;}
+button{background:#0ea5e9;color:white;font-weight:bold;border:none;cursor:pointer;}
+button:hover{background:#0284c7;}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:15px;background:#f3f3f3;box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+.dots{font-size:22px;cursor:pointer;}
+.menu{position:absolute;top:60px;right:10px;background:white;border:1px solid #ccc;border-radius:10px;display:none;overflow:hidden;}
+.menu div{padding:12px 20px;cursor:pointer;}
+.menu div:hover{background:#e0f2fe;}
+.result{margin-top:10px;padding:8px;background:#f3f3f3;border-radius:8px;text-align:center;font-size:14px;}
+<!-- Add Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI', sans-serif;
+  background:linear-gradient(135deg,#f0f4f8,#e2e8f0);
+  color:#333;
+}
+
+.card{
+  max-width:450px;
+  margin:20px auto;
+  padding:20px;
+  border-radius:16px;
+  background:white;
+  box-shadow:0 10px 25px rgba(0,0,0,0.12);
+  transition:0.3s;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 15px 30px rgba(0,0,0,0.15);
+}
+
+input, select, button{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
+  font-size:15px;
+}
+
+button{
+  background:#0ea5e9;
+  color:white;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+  transition:0.2s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+button:hover{background:#0284c7;}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px;
+  background:#f3f3f3;
+  box-shadow:0 3px 10px rgba(0,0,0,0.1);
+  border-radius:0 0 12px 12px;
+}
+
+.dots{
+  font-size:22px;
+  cursor:pointer;
+}
+
+.menu{
+  position:absolute;
+  top:60px;
+  right:10px;
+  background:white;
+  border:1px solid #ccc;
+  border-radius:12px;
+  display:none;
+  overflow:hidden;
+}
+
+.menu div{
+  padding:12px 20px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.menu div:hover{background:#e0f2fe;}
+
+.result{
+  margin-top:10px;
+  padding:10px;
+  background:#f3f3f3;
+  border-radius:10px;
+  text-align:center;
+  font-size:14px;
+  word-break:break-word;
+}
+
+.bulk-input{
+  display:flex;
+  gap:10px;
+}
+.bulk-input input{flex:1;}
+</style>
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="card" id="loginBox">
+  <h2>Login</h2>
+  <input id="luser" placeholder="Username">
+  <input id="lpass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <div style="text-align:center;margin-top:8px;cursor:pointer;color:#0ea5e9;" onclick="showRegister()">Create Account</div>
+</div>
+
+<!-- REGISTER -->
+<div class="card" id="registerBox" style="display:none;">
+  <h2>Register</h2>
+  <input id="email" placeholder="Email">
+  <input id="fullname" placeholder="Full Name">
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <input id="ref" placeholder="Referral Code (required)">
+  <button onclick="register()">Create Account</button>
+  <div style="text-align:center;margin-top:8px;cursor:pointer;color:#0ea5e9;" onclick="showLogin()">Back to Login</div>
+</div>
+
+<!-- MAIN PANEL -->
+<div id="mainPanel" style="display:none;">
+  <div class="topbar">
+    <h3>SHAN ADMIN PANEL</h3>
+    <div class="dots" onclick="toggleMenu()">⋮</div>
+  </div>
+
+  <div class="menu" id="menu">
+    <div onclick="showDashboard()">Dashboard</div>
+    <div onclick="showGen()">Generate Key</div>
+    <div onclick="showList()">Key List</div>
+    <div onclick="showAccount()">Account</div>
+    <div onclick="adminShowReferral()">Admin Referral</div>
+  </div>
+
+  <!-- GENERATE KEY -->
+  <div class="card" id="genBox" style="display:none;">
+    <h3>Generate Key</h3>
+    <select id="game">
+      <option value="CODM_FREE">CODM FREE</option>
+      <option value="CODM_VIP">CODM VIP</option>
+    </select>
+    <input id="slot" placeholder="Device Slot (1)">
+    <input id="days" placeholder="Days (ex:7)">
+    <input id="custom" placeholder="Custom Key (optional)">
+    <button onclick="generate()">Generate Key</button>
+   
+    <div class="result" id="res">Waiting...</div>
+  </div>
+
+  <!-- KEY LIST -->
+  <div class="card" id="listBox" style="display:none;">
+    <h3>Key List <span id="onlineCount">[0 online]</span></h3>
+    <div id="keyList"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="card" id="dashBox" style="display:none;">
+    <h3>Dashboard</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="card" style="margin:0;">
+        <h4>Total Users</h4>
+        <p id="totalUsers">0</p>
+      </div>
+      <div class="card" style="margin:0;">
+        <h4>Total Keys</h4>
+        <p id="totalKeys">0</p>
+      </div>
+      <div class="card" style="margin:0;">
+        <h4>Active Keys</h4>
+        <p id="activeKeys">0</p>
+      </div>
+      <div class="card" style="margin:0;">
+        <h4>Expired Keys</h4>
+        <p id="expiredKeys">0</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT PANEL -->
+  <div class="card" id="accountBox" style="display:none;">
+    <h3>My Account</h3>
+    <p><b>Name:</b> <span id="accFullname"></span></p>
+    <p><b>Email:</b> <span id="accEmail"></span></p>
+    <p><b>Username:</b> <span id="accUsername"></span></p>
+
+    <hr>
+    <h4>Change Password</h4>
+    <input type="password" id="currentPass" placeholder="Current Password">
+    <input type="password" id="newPass" placeholder="New Password">
+    <button onclick="changePassword()">Change Password</button>
+
+    <hr>
+    <h4>Referral Code</h4>
+    <input type="text" id="referralLink" readonly>
+    <button onclick="copyReferral()">Copy Referral</button>
+
+    <div class="result" id="accResult">Waiting...</div>
+  </div>
+
+  <!-- ADMIN REFERRAL PANEL -->
+  <div class="card" id="adminRefBox" style="display:none;">
+  <h3>Admin Referral Generator (Owner Only)</h3>
+<input type="number" id="adminDays" placeholder="Days valid for referral">
+
+<select id="refRole">
+  <option value="admin">Admin</option>
+  <option value="owner">Owner</option>
+</select>
+
+<button onclick="adminGenerateReferral()">Generate Referral</button>
+<div class="result" id="adminRes">Waiting...</div>
+  </div>
+
+</div>
+
+<script>
+// ===== FIREBASE CONFIG =====
+ // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+var firebaseConfig = {
+  apiKey: "AIzaSyA9zExNxWUMOrwNMhWzxnwR1bjpdDWorOQ",
+  authDomain: "messengerbyshan.firebaseapp.com",
+  databaseURL: "https://messengerbyshan-default-rtdb.firebaseio.com",
+  projectId: "messengerbyshan",
+  storageBucket: "messengerbyshan.firebasestorage.app",
+  messagingSenderId: "339885508209",
+  appId: "1:339885508209:web:3b9734d3ac55e613157dd0",
+  measurementId: "G-0VXZQTHZS7"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+
+// ===== UI SWITCH =====
+function showRegister(){ loginBox.style.display="none"; registerBox.style.display="block"; }
+function showLogin(){ loginBox.style.display="block"; registerBox.style.display="none"; }
+
+let currentUser = "";
+
+// ===== LOGIN / REGISTER WITH REFERRAL + ROLE =====
+function register(){
+  let email=document.getElementById("email").value;
+  let fullname=document.getElementById("fullname").value;
+  let username=document.getElementById("username").value;
+  let password=document.getElementById("password").value;
+  let ref=document.getElementById("ref").value;
+
+  if(!email||!username||!password||!ref){ alert("Fill all fields, referral required!"); return; }
+
+  db.ref("users/"+username).once("value",snap=>{
+    if(snap.exists()){ alert("Username already exists!"); return; }
+
+    db.ref("referrals/"+ref).once("value",snapRef=>{
+      if(!snapRef.exists()){ alert("Referral not valid"); return; }
+      let r = snapRef.val();
+      if(r.used){ alert("Referral already used"); return; }
+
+      let expire = Date.now() + r.days*86400000;
+
+      // Default role can be admin; owner should be set manually in DB
+      let role = r.role || "admin"; // 🔥 get role from referral
+
+      db.ref("users/"+username).set({
+        email, fullname, password,
+        referral: ref,
+        referralExpiry: expire,
+        role
+      });
+
+      db.ref("referrals/"+ref+"/used").set(true);
+      db.ref("referrals/"+ref+"/assignedTo").set(username);
+
+      alert("Account created! You can now login.");
+      showLogin();
+    });
+  });
+}
+
+function login() {
+  let user = document.getElementById("luser").value;
+  let pass = document.getElementById("lpass").value;
+  
+  if (!user || !pass) { alert("Fill username & password"); return; }
+  
+  db.ref("users/" + user).once("value", snap => {
+    if (!snap.exists()) { alert("User not found"); return; }
+    
+    let data = snap.val();
+    if (data.password !== pass) { alert("Wrong password"); return; }
+
+    // Only check referral for new accounts
+    if(data.referralExpiry && Date.now() > data.referralExpiry){
+      alert("Referral expired. Contact owner.");
+      return;
+    }
+
+    currentUser = user;
+    loginBox.style.display = "none";
+    registerBox.style.display = "none";
+    mainPanel.style.display = "block";
+    loadKeys();
+  });
+}
+
+// ===== MENU =====
+function toggleMenu(){ menu.style.display=menu.style.display=="block"?"none":"block"; }
+function showGen(){ genBox.style.display="block"; listBox.style.display="none"; dashBox.style.display="none"; accountBox.style.display="none"; adminRefBox.style.display="none"; menu.style.display="none"; checkAccess(); }
+function showList(){ genBox.style.display="none"; listBox.style.display="block"; dashBox.style.display="none"; accountBox.style.display="none"; adminRefBox.style.display="none"; menu.style.display="none"; loadKeys(); checkAccess();}
+function showDashboard(){ genBox.style.display="none"; listBox.style.display="none"; dashBox.style.display="block"; accountBox.style.display="none"; adminRefBox.style.display="none"; menu.style.display="none"; loadDashboard(); checkAccess(); }
+function showAccount(){ genBox.style.display="none"; listBox.style.display="none"; dashBox.style.display="none"; accountBox.style.display="block"; adminRefBox.style.display="none"; menu.style.display="none"; loadAccount(); checkAccess();}
+function adminShowReferral(){ genBox.style.display="none"; listBox.style.display="none"; dashBox.style.display="none"; accountBox.style.display="none"; adminRefBox.style.display="block"; menu.style.display="none"; }
+
+// ===== CHECK USER ACCESS =====
+function checkAccess(){
+  db.ref("users/"+currentUser).once("value",snap=>{
+    let u = snap.val();
+    if(!u || !u.referral || Date.now() > u.referralExpiry){
+      alert("Your referral expired. Contact owner.");
+      mainPanel.style.display="none";
+      loginBox.style.display="block";
+    }
+  });
+}
+
+// ===== KEY GENERATION =====
+let gameEl=document.getElementById("game");
+let slotEl=document.getElementById("slot");
+let daysEl=document.getElementById("days");
+let customEl=document.getElementById("custom");
+let res=document.getElementById("res");
+let keyListEl=document.getElementById("keyList");
+let onlineCountEl=document.getElementById("onlineCount");
+
+function randomKey(){ return "KEY-"+Math.random().toString(36).substring(2,10).toUpperCase(); }
+// ===== KEY GENERATION (No device ID) =====
+function generate() {
+  db.ref("users/" + currentUser).once("value", snap => {
+    let u = snap.val();
+    if (!u) { alert("User not found"); return; }
+    
+    let isOwner = u.role === "owner";
+    let isAdmin = u.role === "admin";
+    
+    if (!isOwner && !isAdmin) {
+      alert("You don't have permission to generate keys.");
+      return;
+    }
+    
+    let game = gameEl.value;
+    let days = parseInt(daysEl.value);
+    let custom = customEl.value.trim();
+    
+    if (!days) { alert("Fill number of days!"); return; }
+    
+    // --- Shan-style key logic ---
+    function randomLetters(length) {
+      const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+      let s = "";
+      for (let i = 0; i < length; i++) {
+        s += letters.charAt(Math.floor(Math.random() * letters.length));
+      }
+      return s;
+    }
+    
+    function expiryCode(days) {
+      const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+      let num = Math.floor(Date.now() / 1000) + days * 86400; // seconds
+      let code = "";
+      while (num > 0) {
+        let rem = num % 23;
+        code = letters[rem] + code;
+        num = Math.floor(num / 23);
+      }
+      return code;
+    }
+    
+    let key = custom ? custom : randomLetters(4) + "-" + expiryCode(days);
+    let now = Date.now();
+    let expire = now + days * 86400000;
+    
+    if (isAdmin) game = "ALL_ACCESS";
+    
+    let data = {
+      game,
+      created: now,
+      expire,
+      status: true,
+      owner: currentUser,
+      key
+    };
+    
+    db.ref("keys/" + key).set(data);
+    
+    // Display structured info
+    res.innerHTML = `
+      <b>Game:</b> ${game}<br>
+      <b>Duration:</b> ${days} day(s)<br>
+      <b>Key:</b> ${key}<br>
+      <b>Generated by:</b> ${currentUser}<br>
+      <b>Expires:</b> ${new Date(expire).toLocaleDateString()}
+    `;
+  });
+}
+
+// ===== LOAD KEYS =====
+function loadKeys(){
+  db.ref("keys").on("value",snap=>{
+    let data=snap.val();
+    let html="";
+    let online=0;
+    for(let k in data){
+      let key=data[k];
+      let status=key.status?"🟢 Active":"🔴 Disabled";
+      if(key.status && key.expire>Date.now()) online++;
+      html+=`<div style="background:#f3f3f3;padding:10px;margin:10px 0;border-radius:8px;">
+        <b>${k}</b><br>
+        Game: ${key.game}<br>
+        Slot: ${key.slot}<br>
+        Status: ${status}<br>
+        Expires: ${new Date(key.expire).toLocaleDateString()}<br>
+        <button onclick="toggleKey('${k}',${key.status})">${key.status?"Disable":"Enable"}</button>
+        <button onclick="deleteKey('${k}')">Delete</button>
+      </div>`;
+    }
+    keyListEl.innerHTML=html;
+    onlineCountEl.innerText=`[${online} online]`;
+  });
+}
+
+function deleteKey(k){ if(confirm("Delete this key?")) db.ref("keys/"+k).remove(); }
+function toggleKey(k,current){ db.ref("keys/"+k+"/status").set(!current); }
+
+// ===== DASHBOARD =====
+function loadDashboard(){
+  db.ref("users").on("value",snap=>{
+    let data = snap.val();
+    let count = data ? Object.keys(data).length : 0;
+    totalUsers.innerText = count;
+  });
+  db.ref("keys").on("value",snap=>{
+    let data = snap.val();
+    let total=0,active=0,expired=0;
+    for(let k in data){
+      let key=data[k];
+      total++;
+      if(key.expire>Date.now() && key.status) active++;
+      else expired++;
+    }
+    totalKeys.innerText=total;
+    activeKeys.innerText=active;
+    expiredKeys.innerText=expired;
+  });
+}
+
+// ===== ACCOUNT PANEL =====
+function loadAccount(){
+  if(!currentUser) return;
+  db.ref("users/"+currentUser).once("value",snap=>{
+    let data = snap.val();
+    accFullname.innerText = data.fullname;
+    accEmail.innerText = data.email;
+    accUsername.innerText = currentUser;
+    referralLink.value = data.referral + " (expires: "+new Date(data.referralExpiry).toLocaleDateString()+")";
+  });
+}
+
+function changePassword(){
+  let cur=document.getElementById("currentPass").value;
+  let nw=document.getElementById("newPass").value;
+  if(!cur||!nw){ accResult.innerText="Fill all fields!"; return; }
+  db.ref("users/"+currentUser).once("value",snap=>{
+    let data = snap.val();
+    if(data.password!==cur){ accResult.innerText="Wrong current password!"; return; }
+    db.ref("users/"+currentUser+"/password").set(nw);
+    accResult.innerText="✅ Password changed!";
+    document.getElementById("currentPass").value="";
+    document.getElementById("newPass").value="";
+  });
+}
+
+function copyReferral(){
+  referralLink.select();
+  referralLink.setSelectionRange(0,99999);
+  document.execCommand("copy");
+  accResult.innerText="Referral code copied!";
+}
+
+// ===== ADMIN REFERRAL =====
+function adminGenerateReferral() {
+  db.ref("users/" + currentUser).once("value", snap => {
+    let u = snap.val();
+    if (!u) { adminRes.innerText = "User not found"; return; }
+    
+    // ONLY OWNER can generate referral
+    if (u.role !== "owner") {
+      adminRes.innerText = "Only owner can generate referral codes!";
+      return;
+    }
+    
+    let days = parseInt(document.getElementById("adminDays").value);
+    let role = document.getElementById("refRole").value;
+    
+    if (!days) {
+      adminRes.innerText = "Fill number of days!";
+      return;
+    }
+    
+    let code = "REF-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    let now = Date.now();
+    
+    db.ref("referrals/" + code).set({
+      assignedTo: "",
+      days: days,
+      created: now,
+      used: false,
+      role: role // 🔥 IMPORTANT
+    });
+    
+    adminRes.innerText = "Referral generated: " + code + " (" + role + ")";
+  });
+}
+</script>
+</body>
+</html>
